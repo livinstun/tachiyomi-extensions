@@ -41,6 +41,7 @@ import java.io.IOException
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
@@ -678,6 +679,12 @@ abstract class Madara(
 
     /**
      * Set it to true if the source uses the new AJAX endpoint to
+     * fetch the manga chapters with GET request using manga ID
+     */
+    protected open val useNewChapterEndpointWithMangaID: Boolean = false
+
+    /**
+     * Set it to true if the source uses the new AJAX endpoint to
      * fetch the manga chapters instead of the old admin-ajax.php one.
      */
     protected open val useNewChapterEndpoint: Boolean = false
@@ -715,6 +722,14 @@ abstract class Madara(
         return POST("$mangaUrl/ajax/chapters", xhrHeaders)
     }
 
+    protected open fun newXhrChaptersRequestWithMangaId(mangaId: String): Request {
+        val xhrHeaders = headersBuilder()
+            .add("Referer", "$baseUrl/")
+            .add("X-Requested-With", "XMLHttpRequest")
+            .build()
+        return GET("$baseUrl/ajax-list-chapter?mangaID=$mangaId", xhrHeaders)
+    }
+
     override fun chapterListParse(response: Response): List<SChapter> {
         val document = response.asJsoup()
         val chaptersWrapper = document.select("div[id^=manga-chapters-holder]")
@@ -727,6 +742,8 @@ abstract class Madara(
 
             var xhrRequest = if (useNewChapterEndpoint || oldChapterEndpointDisabled) {
                 xhrChaptersRequest(mangaUrl)
+            } else if (useNewChapterEndpointWithMangaID) {
+                newXhrChaptersRequestWithMangaId(mangaId)
             } else {
                 oldXhrChaptersRequest(mangaId)
             }
@@ -779,6 +796,11 @@ abstract class Madara(
 
         return chapter
     }
+
+    /**
+     * enable this if site doesn't show year for the chapter date
+     */
+    open val dateWithoutYear: Boolean = false
 
     open fun parseChapterDate(date: String?): Long {
         date ?: return 0
@@ -836,6 +858,19 @@ abstract class Madara(
                 }
                     .let { dateFormat.tryParse(it.joinToString(" ")) }
             }
+
+            dateWithoutYear -> {
+                return try {
+                    val calendar = Calendar.getInstance()
+                    calendar.time = dateFormat.parse(date) ?: Date()
+                    // set year as current when year is missing in format
+                    calendar.set(Calendar.YEAR, Calendar.getInstance().get(Calendar.YEAR))
+                    calendar.time.time
+                } catch (_: ParseException) {
+                    0
+                }
+            }
+
             else -> dateFormat.tryParse(date)
         }
     }
