@@ -836,7 +836,6 @@ abstract class Madara(
                 }
                     .let { dateFormat.tryParse(it.joinToString(" ")) }
             }
-
             else -> dateFormat.tryParse(date)
         }
     }
