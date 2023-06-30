@@ -679,12 +679,6 @@ abstract class Madara(
 
     /**
      * Set it to true if the source uses the new AJAX endpoint to
-     * fetch the manga chapters with GET request using manga ID
-     */
-    protected open val useNewChapterEndpointWithMangaID: Boolean = false
-
-    /**
-     * Set it to true if the source uses the new AJAX endpoint to
      * fetch the manga chapters instead of the old admin-ajax.php one.
      */
     protected open val useNewChapterEndpoint: Boolean = false
@@ -722,14 +716,6 @@ abstract class Madara(
         return POST("$mangaUrl/ajax/chapters", xhrHeaders)
     }
 
-    protected open fun newXhrChaptersRequestWithMangaId(mangaId: String): Request {
-        val xhrHeaders = headersBuilder()
-            .add("Referer", "$baseUrl/")
-            .add("X-Requested-With", "XMLHttpRequest")
-            .build()
-        return GET("$baseUrl/ajax-list-chapter?mangaID=$mangaId", xhrHeaders)
-    }
-
     override fun chapterListParse(response: Response): List<SChapter> {
         val document = response.asJsoup()
         val chaptersWrapper = document.select("div[id^=manga-chapters-holder]")
@@ -742,8 +728,6 @@ abstract class Madara(
 
             var xhrRequest = if (useNewChapterEndpoint || oldChapterEndpointDisabled) {
                 xhrChaptersRequest(mangaUrl)
-            } else if (useNewChapterEndpointWithMangaID) {
-                newXhrChaptersRequestWithMangaId(mangaId)
             } else {
                 oldXhrChaptersRequest(mangaId)
             }
