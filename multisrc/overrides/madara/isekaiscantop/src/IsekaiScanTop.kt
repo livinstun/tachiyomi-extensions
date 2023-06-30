@@ -9,17 +9,12 @@ import okhttp3.CacheControl
 import okhttp3.Request
 import okhttp3.Response
 import org.jsoup.nodes.Document
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 class IsekaiScanTop : Madara(
     "IsekaiScan.top (unoriginal)",
     "https://isekaiscan.top",
     "en",
-    SimpleDateFormat("MMM dd, HH:mm", Locale.US),
 ) {
-
-    override val dateWithoutYear = true
 
     override fun popularMangaRequest(page: Int): Request {
         return GET(

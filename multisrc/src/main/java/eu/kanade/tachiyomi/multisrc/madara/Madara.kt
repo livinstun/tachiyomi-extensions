@@ -41,7 +41,6 @@ import java.io.IOException
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
@@ -781,11 +780,6 @@ abstract class Madara(
         return chapter
     }
 
-    /**
-     * enable this if site doesn't show year for the chapter date
-     */
-    open val dateWithoutYear: Boolean = false
-
     open fun parseChapterDate(date: String?): Long {
         date ?: return 0
 
@@ -841,18 +835,6 @@ abstract class Madara(
                     }
                 }
                     .let { dateFormat.tryParse(it.joinToString(" ")) }
-            }
-
-            dateWithoutYear -> {
-                return try {
-                    val calendar = Calendar.getInstance()
-                    calendar.time = dateFormat.parse(date) ?: Date()
-                    // set year as current when year is missing in format
-                    calendar.set(Calendar.YEAR, Calendar.getInstance().get(Calendar.YEAR))
-                    calendar.time.time
-                } catch (_: ParseException) {
-                    0
-                }
             }
 
             else -> dateFormat.tryParse(date)
